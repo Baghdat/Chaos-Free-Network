@@ -136,73 +136,6 @@ class LSTMStateTuple(_LSTMStateTuple):
     return c.dtype
 
 
-class LSTM_RNNCell(tf.nn.rnn_cell.RNNCell):
-  
-  def __init__(self, hidden_size, reuse=True):
-    #self._num_units = num_units
-    #self._activation = activation or math_ops.tanh
-    self._hidden_size = hidden_size
-    self.init_scale = init_scale = config.init_scale = 0.05
-
-  @property
-  def state_size(self):
-    return LSTMStateTuple(self._hidden_size, self._hidden_size)
-
-  @property
-  def output_size(self):
-    return self._hidden_size
-
-  def __call__(self, inputs, state, scope=None):
-    """LSTM Zaremba network:
-    where Wx = """
-    #theta = act(W * input + U * state + B)
-    #eta = act(W * input + U * state + B)
-    #Wx = act(W * input + B)
-    #c, h = array_ops.split(value=state, num_or_size_splits=2, axis=1)
-    c, h = state
-    #print(state.shape)
-    with tf.variable_scope(scope or "LSTM"):
-        
-        with tf.variable_scope("Gates"):
-            W_i = tf.get_variable('W_i', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            U_i = tf.get_variable('U_i', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            b_i = tf.get_variable('b_i', [self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            i = tf.sigmoid(tf.matmul(inputs, W_i) + tf.matmul(h, U_i) + b_i)
-            W_f = tf.get_variable('W_f', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            U_f = tf.get_variable('U_f', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            b_f = tf.get_variable('b_f', [self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            f = tf.sigmoid(tf.matmul(inputs, W_f) + tf.matmul(h, U_f) + b_f)
-            W_o = tf.get_variable('W_o', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            U_o = tf.get_variable('U_o', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            b_o = tf.get_variable('b_o', [self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            #o = tf.sigmoid(tf.matmul(state, U_o) + b_o)
-            o = tf.sigmoid(tf.matmul(inputs, W_o) + tf.matmul(h, U_o) + b_o)
-        with tf.variable_scope("Candidate"):
-            W_g = tf.get_variable('W_g', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            U_g = tf.get_variable('U_g', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            b_g = tf.get_variable('b_g', [self._hidden_size], initializer=tf.random_uniform_initializer(-self.init_scale, self.init_scale))
-            #g = f*c + i*tf.tanh(tf.matmul(inputs, W_g) + tf.matmul(state, U_g) + b_g)
-            g = tf.tanh(tf.matmul(inputs, W_g) + tf.matmul(h, U_g) + b_g)
-        
-        #mt = o*tf.tanh(c)
-        #W_y = tf.get_variable('W_y', [self._hidden_size, self._hidden_size], initializer=tf.random_uniform_initializer(-init_scale, init_scale))
-        #b_y = tf.get_variable('b_y', [self._hidden_size], initializer=tf.random_uniform_initializer(-init_scale, init_scale))
-        new_c = (c * f + i * g)
-        new_h = tf.tanh(new_c) * o
-        
-        #new_c = f*state + i*g
-        #new_h = o*tf.tanh(new_c)
-        
-        #new_c = c
-        #new_h = h
-        
-        #new_state = array_ops.concat([new_c, new_h], 1)
-        
-        new_state = LSTMStateTuple(new_c, new_h)
-        #output = tf.softmax(W_y*mt + b_y)
-    return new_h, new_state
-
-
 class LSTM_RNNCell_3(tf.nn.rnn_cell.RNNCell):
   
   def __init__(self, hidden_size, reuse=True):
@@ -220,7 +153,7 @@ class LSTM_RNNCell_3(tf.nn.rnn_cell.RNNCell):
     return self._hidden_size
 
   def __call__(self, inputs, state, scope=None):
-    """LSTM Zaremba network:
+    """LSTM Chaos free:
     where Wx = """
     #theta = act(W * input + U * state + B)
     #eta = act(W * input + U * state + B)
@@ -327,8 +260,8 @@ class MyModel:
     words_embedded_old = tf.nn.embedding_lookup(word_embedding, self.x)
     words_embedded = tf.zeros([20, 35, 2], dtype=tf.float32)
     #Tensor("Model_1/embedding_lookup:0", shape=(20, 35, 2), dtype=float32)
-    print (words_embedded)
-    print (words_embedded_old)
+    #print (words_embedded)
+    #print (words_embedded_old)
     if is_train:
       rnn_input = tf.nn.dropout(words_embedded, config.keep_prob)#dropOut = words_embedd
     # ... and then process it with a stack of two LSTMs
@@ -506,7 +439,6 @@ if __name__ == '__main__':
 
 
 # In[ ]:
-
 
 
 

@@ -3,7 +3,7 @@
 
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 import tensorflow as tf
 GPUconfig = tf.ConfigProto()
 GPUconfig.gpu_options.per_process_gpu_memory_fraction = 0.2
